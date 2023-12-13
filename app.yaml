@@ -1,0 +1,13 @@
+languages:
+  - go
+  - java
+  - python
+
+repos:
+  - 1Panel-dev/1Panel
+  - metersphere/metersphere
+  - dataease/dataease
+  - jumpserver/jumpserver
+
+friendName: "程会玩"
+cronSpec: "0 0 8 * *"
