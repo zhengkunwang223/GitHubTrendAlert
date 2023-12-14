@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 var (
@@ -174,7 +175,13 @@ func main() {
 		return
 	}
 
-	c := cron.New()
+	loc, err := time.LoadLocation("Asia/Shanghai")
+	if err != nil {
+		fmt.Println("Error loading location:", err)
+		return
+	}
+	c := cron.NewWithLocation(loc)
+
 	log.Println("start job")
 	c.AddFunc(CronSpec, func() {
 		syncRepo()
