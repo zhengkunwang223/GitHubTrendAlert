@@ -9,6 +9,7 @@ import (
 	"github.com/skip2/go-qrcode"
 	"gopkg.in/yaml.v3"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -81,7 +82,9 @@ func getGitHubTrendingByLanguage(language string) {
 	for index, project := range projects {
 		i := index + 1
 		if repoExist(project.Name) {
-			_ = sendMsg(fmt.Sprintf("[%s] Github Trending %s 榜单上榜! 名次 %d 当前 star %d", project.Name, language, i, project.Stars))
+			if err = sendMsg(fmt.Sprintf("[%s] Github Trending %s 榜单上榜! 名次 %d 当前 star %d", project.Name, language, i, project.Stars)); err != nil {
+				fmt.Printf("发消息失败 %v", err)
+			}
 		}
 	}
 }
@@ -115,13 +118,17 @@ func getTotalGitHubTrending() {
 }
 
 func syncRepo() {
+	log.Println("开始同步榜单。。。")
 	for _, language := range Languages {
+		log.Printf("同步[%s]榜单。。。", language)
 		getGitHubTrendingByLanguage(language)
 	}
+	log.Println("开始同步总榜单。。。")
 	getTotalGitHubTrending()
 }
 
 func sendMsg(msg string) error {
+	log.Println("准备发送消息")
 	self, err := bot.GetCurrentUser()
 	if err != nil {
 		fmt.Printf(err.Error())
@@ -145,6 +152,7 @@ func sendMsg(msg string) error {
 }
 
 func main() {
+	log.Println("启动 准备登录微信")
 	config, err := loadConfig()
 	if err != nil {
 		fmt.Println("Error loading config:", err)
@@ -155,6 +163,8 @@ func main() {
 	FriendName = config.FriendName
 	CronSpec = config.CronSpec
 
+	log.Printf("当前监听的仓库 %s", strings.Join(Repos, ","))
+	log.Printf("消息发送给 %s", FriendName)
 	bot = openwechat.DefaultBot(openwechat.Desktop)
 	bot.UUIDCallback = ConsoleQrCode
 	reloadStorage := openwechat.NewFileHotReloadStorage("storage.json")
@@ -165,6 +175,7 @@ func main() {
 	}
 
 	c := cron.New()
+	log.Println("start job")
 	c.AddFunc(CronSpec, func() {
 		syncRepo()
 	})
